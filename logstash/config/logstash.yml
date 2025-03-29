@@ -1,0 +1,33 @@
+---
+## Default Logstash configuration from Logstash base image.
+## https://github.com/elastic/logstash/blob/main/docker/data/logstash/config/logstash-full.yml
+#
+http.host: 0.0.0.0
+
+node.name: logstash
+input {
+  jdbc {
+    jdbc_connection_string => "jdbc:postgresql://103.232.120.9:5432/pos"
+    jdbc_user => "postgres"
+    jdbc_password => "taolahackerlogiauten"
+    jdbc_driver_library => "/usr/share/logstash/postgresql.jar"
+    jdbc_driver_class => "org.postgresql.Driver"
+    statement => "SELECT * FROM products"
+    schedule => "* * * * *"
+  }
+}
+
+filter {
+  mutate {
+    convert => { "id" => "string" }
+  }
+}
+
+output {
+  elasticsearch {
+    hosts => ["http://elasticsearch:9200"]
+    index => "your_index"
+    document_id => "%{id}"
+  }
+  stdout { codec => json }
+}
